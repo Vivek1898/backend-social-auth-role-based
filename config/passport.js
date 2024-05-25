@@ -12,6 +12,7 @@ module.exports = function (passport) {
                 clientID: process.env.GOOGLE_CLIENT_ID,
                 clientSecret: process.env.GOOGLE_CLIENT_SECRET,
                 callbackURL: "/auth/google/callback",
+                proxy: true
             },
             async (accessToken, refreshToken, profile, done) => {
                 const email = profile.emails[0].value;
@@ -58,6 +59,7 @@ module.exports = function (passport) {
                 clientID: process.env.GITHUB_CLIENT_ID,
                 clientSecret: process.env.GITHUB_CLIENT_SECRET,
                 callbackURL: "/auth/github/callback",
+                proxy: true
             },
             async function (accessToken, refreshToken, profile, done) {
                 const octokit = new Octokit({auth: accessToken});
