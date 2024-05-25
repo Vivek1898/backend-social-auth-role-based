@@ -9,7 +9,6 @@ module.exports = {
     }
   },
   isAuth: function (req, res, next) {
-    // console.log(req.user);
     JwtService.verifyToken(req, res, next);
 
   },

@@ -3,9 +3,6 @@ const dotenv = require("dotenv");
 const connectDB = require("./config/db");
 const morgan = require("morgan");
 const passport = require("passport");
-const session = require("express-session");
-const MongoStore = require("connect-mongo");
-const more = require("morgan");
 const cors = require("cors");
 const fileUpload = require("express-fileupload");
 const bodyParser = require("body-parser");
@@ -13,7 +10,7 @@ const ResponseService = require("./services/ResponseService");
 const ConstantService = require("./services/ConstantService");
 
 // load config
-dotenv.config({ path: "./config/.env" });
+dotenv.config()
 
 // passport config
 require("./config/passport")(passport);
@@ -39,7 +36,7 @@ app.use(
 
 app.use(
   cors({
-    origin: "http://localhost:3001",
+    origin: ["http://localhost:3001" , "https://social-auth-role-based.onrender.com"],
     methods: "GET,POST,PUT,DELETE",
     credentials: true,
   })
