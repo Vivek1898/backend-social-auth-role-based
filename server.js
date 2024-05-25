@@ -8,6 +8,8 @@ const fileUpload = require("express-fileupload");
 const bodyParser = require("body-parser");
 const ResponseService = require("./services/ResponseService");
 const ConstantService = require("./services/ConstantService");
+const swaggerUI = require('swagger-ui-express');
+const swaggerSpec = require('./swagger');
 
 // load config
 dotenv.config()
@@ -45,6 +47,7 @@ app.use(
 // Routes
 app.use("/auth", require("./routes/auth"));
 app.use("/user", require("./routes/user"));
+app.use('/docs', swaggerUI.serve, swaggerUI.setup(swaggerSpec));
 
 global.ResponseService = ResponseService;
 global.ConstantService = ConstantService;
