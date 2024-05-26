@@ -138,6 +138,7 @@ module.exports = {
                 password: req.body.password,
                 bio: req.body.bio,
                 userId: req.sessionData.id,
+                role: req.body.role,
             };
             const schema = joi.object({
                 name: joi.string().allow(''),
@@ -147,6 +148,7 @@ module.exports = {
                 password: joi.string().allow(''),
                 bio: joi.string().allow(''),
                 userId: joi.string().required(),
+                role: joi.string().valid(ConstantService.roles[0], ConstantService.roles[1]).allow('')
             });
 
             const {error, value} = schema.validate(request);
@@ -169,11 +171,18 @@ module.exports = {
                 image: request.image || user.image,
                 password: request.password ? sha256(request.password + process.env.SALT) : user.password,
                 bio: request.bio || user.bio,
+                role: request.role || user.role,
             };
             const updatedUser = await User.findByIdAndUpdate(request.userId, update, {new: true});
             updatedUser.password = undefined;
+            // Send new token
+            const token = await JwtService.issueToken(updatedUser);
 
-            return ResponseService.json(res, ConstantService.responseCode.SUCCESS, ConstantService.responseMessage.USER_UPDATE_SUCCESS, updatedUser);
+
+            return ResponseService.json(res, ConstantService.responseCode.SUCCESS, ConstantService.responseMessage.USER_UPDATE_SUCCESS, {
+                user: updatedUser,
+                token,
+            });
         } catch (error) {
             return ResponseService.json(res, ConstantService.responseCode.INTERNAL_SERVER_ERROR, ConstantService.responseMessage.USER_UPDATE_ERROR);
 

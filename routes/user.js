@@ -103,6 +103,9 @@ router.post("/public-list", isAuth, getPublicUserList);
  *               bio:
  *                 type: string
  *                 description: User's biography
+ *               role:
+ *                  type: string
+ *                  description: User's role
  *     responses:
  *       200:
  *         description: User profile updated successfully
