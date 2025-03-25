@@ -10,6 +10,7 @@ const ResponseService = require("./services/ResponseService");
 const ConstantService = require("./services/ConstantService");
 const swaggerUI = require('swagger-ui-express');
 const swaggerSpec = require('./swagger');
+const session = require("express-session");
 
 // load config
 dotenv.config()
@@ -21,6 +22,13 @@ connectDB();
 const app = express();
 
 app.use(morgan("dev"));
+
+// Session Middleware
+app.use(session({
+  secret: "your_secret_key",
+  resave: false,
+  saveUninitialized: true
+}));
 
 //passport middleware
 app.use(passport.initialize());
@@ -48,6 +56,10 @@ app.use(
 app.use("/auth", require("./routes/auth"));
 app.use("/user", require("./routes/user"));
 app.use('/docs', swaggerUI.serve, swaggerUI.setup(swaggerSpec));
+
+app.get('/',(req,res)=>{
+  res.send(req.headers)
+})
 
 global.ResponseService = ResponseService;
 global.ConstantService = ConstantService;

@@ -1,6 +1,7 @@
 const GoogleStrategy = require("passport-google-oauth20").Strategy;
 const User = require("../models/User");
 const GithubStrategy = require("passport-github2").Strategy;
+const TelegramStrategy = require("passport-telegram-official");
 // const FacebookStrategy = require("passport-facebook").Strategy;
 const {Octokit} = require("octokit");
 
@@ -53,53 +54,96 @@ module.exports = function (passport) {
             }
         )
     );
+    // passport.use(
+    //     new GithubStrategy(
+    //         {
+    //             clientID: process.env.GITHUB_CLIENT_ID,
+    //             clientSecret: process.env.GITHUB_CLIENT_SECRET,
+    //             callbackURL: "/auth/github/callback",
+    //             proxy: true
+    //         },
+    //         async function (accessToken, refreshToken, profile, done) {
+    //             const octokit = new Octokit({auth: accessToken});
+    //             const emails = await octokit.request("GET /user/emails", {});
+    //             const email = emails.data[0].email;
+
+    //             const newUser = {
+    //                 googleId: "",
+    //                 githubId: profile.id,
+    //                 displayName: profile.displayName,
+    //                 //cut name into first and last name
+    //                 firstName: profile.displayName.split(" ")[0] || "",
+
+    //                 lastName: "",
+    //                 emailId: email,
+    //             };
+
+    //             try {
+    //                 let user = await User.findOne({emailId: email});
+    //                 if (user && user.githubId) {
+    //                     done(null, user);
+    //                 } else if (!user) {
+    //                     user = await User.create(newUser);
+    //                     await user.save();
+    //                     done(null, user);
+    //                 } else {
+    //                     user = await User.findOneAndUpdate(
+    //                         {emailId: email},
+    //                         {$set: {githubId: profile.id}},
+    //                         {new: true}
+    //                     );
+
+    //                     done(null, user);
+    //                 }
+    //             } catch (err) {
+    //                 console.error(err);
+    //             }
+    //         }
+    //     )
+    // );
     passport.use(
-        new GithubStrategy(
-            {
-                clientID: process.env.GITHUB_CLIENT_ID,
-                clientSecret: process.env.GITHUB_CLIENT_SECRET,
-                callbackURL: "/auth/github/callback",
-                proxy: true
-            },
-            async function (accessToken, refreshToken, profile, done) {
-                const octokit = new Octokit({auth: accessToken});
-                const emails = await octokit.request("GET /user/emails", {});
-                const email = emails.data[0].email;
+        new TelegramStrategy.TelegramStrategy({
+        botToken: process.env.TELEGRAM_BOT_TOKEN, // Add your bot token in .env
+      },
+      async (profile, done) => {
+        // const email = profile.emails[0].value;
+        console.log("PROFILE",profile)
+        const newUser = {
+            telegramId: profile.id,
+            githubId: "",
+            email:"",
+            displayName: profile.displayName,
+            firstName: profile.name.givenName,
+            lastName: profile.name.familyName,
+        };
 
-                const newUser = {
-                    googleId: "",
-                    githubId: profile.id,
-                    displayName: profile.displayName,
-                    //cut name into first and last name
-                    firstName: profile.displayName.split(" ")[0] || "",
+        try {
+            let user = await User.findOne({telegramId: profile.id});
 
-                    lastName: "",
-                    emailId: email,
-                };
-
-                try {
-                    let user = await User.findOne({emailId: email});
-                    if (user && user.githubId) {
-                        done(null, user);
-                    } else if (!user) {
-                        user = await User.create(newUser);
-                        await user.save();
-                        done(null, user);
-                    } else {
-                        user = await User.findOneAndUpdate(
-                            {emailId: email},
-                            {$set: {githubId: profile.id}},
-                            {new: true}
-                        );
-
-                        done(null, user);
-                    }
-                } catch (err) {
-                    console.error(err);
-                }
+            if (user && user.telegramId) {
+                done(null, user);
+            } else if (!user) {
+                user = await User.create(newUser);
+                done(null, user);
+            } else {
+                user = await User.findOneAndUpdate(
+                    {telegramId: profile.id},
+                    {
+                        $set: {
+                            telegramId: profile.id,
+                            firstName: profile.name.givenName,
+                            lastName: profile.name.familyName,
+                        },
+                    },
+                    {new: true}
+                );
+                done(null, user);
             }
-        )
-    );
+        } catch (err) {
+            console.error(err);
+        }
+    }
+    ));
     // passport.use(
     //   new FacebookStrategy(
     //     {

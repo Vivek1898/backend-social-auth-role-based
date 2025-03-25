@@ -7,9 +7,12 @@ const UserSchema = new mongoose.Schema({
   githubId: {
     type: String,
   },
+  telegramId: {
+    type: String,
+  },
   emailId: {
     type: String,
-    required: true,
+    sparse: true,
     unique: true,
   },
   displayName: {
@@ -46,5 +49,7 @@ const UserSchema = new mongoose.Schema({
   },
 
 });
+UserSchema.index({ emailId: 1 }, { unique: true, sparse: true });
+
 
 module.exports = mongoose.model("User", UserSchema);
