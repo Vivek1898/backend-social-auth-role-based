@@ -147,4 +147,25 @@ router.post("/register", registerUser);
  *         description: Unauthorized
  */
 router.post("/login", loginUser);
+
+/**
+ * @swagger
+ * /auth/telegram/callback:
+ *   get:
+ *     summary: Telegram authentication callback
+ *     tags: [Auth]
+ *     responses:
+ *       302:
+ *         description: Redirect after telegram authentication
+ */
+router.get("/telegram/callback",
+passport.authenticate("telegram"),
+async (req, res) => {
+   const token = await JwtService.issueToken(req.user)
+       res.cookie('token', token, {httpOnly: true})
+       res.status(200).redirect(`${process.env.CLIENT_URL}/home?token=${token}`);
+ }
+);
+
+
 module.exports = router;

@@ -1,6 +1,7 @@
 const GoogleStrategy = require("passport-google-oauth20").Strategy;
 const User = require("../models/User");
 const GithubStrategy = require("passport-github2").Strategy;
+const TelegramStrategy = require("passport-telegram-official");
 // const FacebookStrategy = require("passport-facebook").Strategy;
 const {Octokit} = require("octokit");
 
@@ -100,6 +101,47 @@ module.exports = function (passport) {
             }
         )
     );
+    passport.use(
+        new TelegramStrategy.TelegramStrategy({
+        botToken: process.env.TELEGRAM_BOT_TOKEN, // Add your bot token in .env
+      },
+      async (profile, done) => {
+        const newUser = {
+            telegramId: profile.id,
+            githubId: "",
+            email:"",
+            displayName: profile.displayName,
+            firstName: profile.name.givenName,
+            lastName: profile.name.familyName,
+        };
+
+        try {
+            let user = await User.findOne({telegramId: profile.id});
+
+            if (user && user.telegramId) {
+                done(null, user);
+            } else if (!user) {
+                user = await User.create(newUser);
+                done(null, user);
+            } else {
+                user = await User.findOneAndUpdate(
+                    {telegramId: profile.id},
+                    {
+                        $set: {
+                            telegramId: profile.id,
+                            firstName: profile.name.givenName,
+                            lastName: profile.name.familyName,
+                        },
+                    },
+                    {new: true}
+                );
+                done(null, user);
+            }
+        } catch (err) {
+            console.error(err);
+        }
+    }
+    ));
     // passport.use(
     //   new FacebookStrategy(
     //     {
