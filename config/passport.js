@@ -54,60 +54,58 @@ module.exports = function (passport) {
             }
         )
     );
-    // passport.use(
-    //     new GithubStrategy(
-    //         {
-    //             clientID: process.env.GITHUB_CLIENT_ID,
-    //             clientSecret: process.env.GITHUB_CLIENT_SECRET,
-    //             callbackURL: "/auth/github/callback",
-    //             proxy: true
-    //         },
-    //         async function (accessToken, refreshToken, profile, done) {
-    //             const octokit = new Octokit({auth: accessToken});
-    //             const emails = await octokit.request("GET /user/emails", {});
-    //             const email = emails.data[0].email;
+    passport.use(
+        new GithubStrategy(
+            {
+                clientID: process.env.GITHUB_CLIENT_ID,
+                clientSecret: process.env.GITHUB_CLIENT_SECRET,
+                callbackURL: "/auth/github/callback",
+                proxy: true
+            },
+            async function (accessToken, refreshToken, profile, done) {
+                const octokit = new Octokit({auth: accessToken});
+                const emails = await octokit.request("GET /user/emails", {});
+                const email = emails.data[0].email;
 
-    //             const newUser = {
-    //                 googleId: "",
-    //                 githubId: profile.id,
-    //                 displayName: profile.displayName,
-    //                 //cut name into first and last name
-    //                 firstName: profile.displayName.split(" ")[0] || "",
+                const newUser = {
+                    googleId: "",
+                    githubId: profile.id,
+                    displayName: profile.displayName,
+                    //cut name into first and last name
+                    firstName: profile.displayName.split(" ")[0] || "",
 
-    //                 lastName: "",
-    //                 emailId: email,
-    //             };
+                    lastName: "",
+                    emailId: email,
+                };
 
-    //             try {
-    //                 let user = await User.findOne({emailId: email});
-    //                 if (user && user.githubId) {
-    //                     done(null, user);
-    //                 } else if (!user) {
-    //                     user = await User.create(newUser);
-    //                     await user.save();
-    //                     done(null, user);
-    //                 } else {
-    //                     user = await User.findOneAndUpdate(
-    //                         {emailId: email},
-    //                         {$set: {githubId: profile.id}},
-    //                         {new: true}
-    //                     );
+                try {
+                    let user = await User.findOne({emailId: email});
+                    if (user && user.githubId) {
+                        done(null, user);
+                    } else if (!user) {
+                        user = await User.create(newUser);
+                        await user.save();
+                        done(null, user);
+                    } else {
+                        user = await User.findOneAndUpdate(
+                            {emailId: email},
+                            {$set: {githubId: profile.id}},
+                            {new: true}
+                        );
 
-    //                     done(null, user);
-    //                 }
-    //             } catch (err) {
-    //                 console.error(err);
-    //             }
-    //         }
-    //     )
-    // );
+                        done(null, user);
+                    }
+                } catch (err) {
+                    console.error(err);
+                }
+            }
+        )
+    );
     passport.use(
         new TelegramStrategy.TelegramStrategy({
         botToken: process.env.TELEGRAM_BOT_TOKEN, // Add your bot token in .env
       },
       async (profile, done) => {
-        // const email = profile.emails[0].value;
-        console.log("PROFILE",profile)
         const newUser = {
             telegramId: profile.id,
             githubId: "",
