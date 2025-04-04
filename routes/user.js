@@ -9,7 +9,7 @@ const {
     uploadAsset,
     accessTokenLogin,
     addToQuickSave,
-    getQuickSaves
+    getQuickSaves, removeQuickSave
 } = require("../controller/userController");
 
 /**
@@ -339,6 +339,33 @@ router.post("/add-to-quick-save", isAuth, addToQuickSave);
  */
 router.get("/get-quick-saves", isAuth, getQuickSaves);
 
+
+/**
+ * @swagger
+ * /user/remove-quick-save/{id}:
+ *   delete:
+ *     summary: Remove a quick save item
+ *     tags: [Users]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the quick save to remove
+ *     responses:
+ *       200:
+ *         description: Quick save removed successfully
+ *       401:
+ *         description: Unauthorized
+ *       404:
+ *         description: Quick save not found
+ *       500:
+ *         description: Internal server error
+ */
+router.delete("/remove-quick-save/:id", isAuth, removeQuickSave);
 
 
 module.exports = router;

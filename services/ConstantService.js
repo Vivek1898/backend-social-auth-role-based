@@ -53,7 +53,11 @@ module.exports = {
 
         QUICK_SAVE_SUCCESS: "Quick save added successfully",
         QUICK_SAVE_RETRIEVED: "Quick saves retrieved successfully",
-        QUICK_SAVE_ERROR: "Error processing quick save request"
+        QUICK_SAVE_ERROR: "Error processing quick save request",
+
+        QUICK_SAVE_REMOVED: "Quick save removed successfully",
+        QUICK_SAVE_NOT_FOUND: "Quick save not found",
+
 
     },
 };

@@ -464,5 +464,49 @@ module.exports = {
                 ConstantService.responseMessage.QUICK_SAVE_ERROR
             );
         }
-    }
+    },
+
+
+    /**
+     * Remove Quick Save
+     * @param req
+     * @param res
+     * @returns {Promise<*>}
+     */
+    removeQuickSave: async (req, res) => {
+        try {
+            const request = {
+                userId: req.sessionData.id,
+                saveId: req.params.id
+            };
+            const schema = joi.object({
+                userId: joi.string().required(),
+                saveId: joi.string().required()
+            });
+
+            const {error, value} = schema.validate(request);
+
+            if (error) {
+                return ResponseService.jsonResponse(res, ConstantService.responseCode.BAD_REQUEST, {
+                    message: error.message
+                });
+            }
+
+            // Find and remove the quick save
+            const result = await QuickSave.findOneAndDelete({
+                _id: request.saveId,
+                userId: request.userId
+            });
+
+            if (!result) {
+                return ResponseService.json(res, ConstantService.responseCode.NOT_FOUND, ConstantService.responseMessage.QUICK_SAVE_NOT_FOUND);
+            }
+
+            return ResponseService.json(res, ConstantService.responseCode.SUCCESS, ConstantService.responseMessage.QUICK_SAVE_REMOVED);
+
+        } catch (error) {
+            console.log(error);
+            return ResponseService.json(res, ConstantService.responseCode.INTERNAL_SERVER_ERROR, ConstantService.responseMessage.QUICK_SAVE_ERROR);
+        }
+    },
 }
