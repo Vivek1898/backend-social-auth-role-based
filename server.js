@@ -47,7 +47,7 @@ app.use(
 
 app.use(
   cors({
-    origin: ["http://localhost:3001" , "https://social-auth-role-based.onrender.com" ,"https://client-social-auth-role-based.vercel.app"],
+    origin: ["http://localhost:3001" ,"http://localhost:4001", "https://social-auth-role-based.onrender.com" ,"https://client-social-auth-role-based.vercel.app"],
     methods: "GET,POST,PUT,DELETE",
     credentials: true,
   })

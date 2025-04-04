@@ -5,6 +5,7 @@ const ConstantService = require('../services/ConstantService');
 const CloudinaryService = require('../services/CloudinaryService');
 const sha256 = require("js-sha256");
 const JwtService = require('../services/JwtService');
+const QuickSave = require('../models/QuickSaves');
 
 module.exports = {
 
@@ -332,6 +333,136 @@ module.exports = {
         } catch (error) {
             console.log(error);
             ResponseService.json(res, ConstantService.responseCode.INTERNAL_SERVER_ERROR, ConstantService.responseMessage.USER_LOGIN_ERROR);
+        }
+    },
+
+    /**
+     *  Add To Quick Save
+     * @param req
+     * @param res
+     * @returns {Promise<*>}
+     */
+
+    addToQuickSave: async (req, res) => {
+        try {
+            const request = {
+                userId: req.sessionData.id,
+                content: req.body.content,
+            };
+            const schema = joi.object({
+                userId: joi.string().required(),
+                content: joi.object().required(),
+            });
+
+            const {error, value} = schema.validate(request);
+
+            if (error) {
+                return ResponseService.jsonResponse(res, ConstantService.responseCode.BAD_REQUEST, {
+                    message: error.message
+                });
+            }
+
+            const quickSave = new QuickSave({
+                userId: request.userId,
+                content: request.content,
+            });
+            await quickSave.save();
+
+            return ResponseService.json(res, ConstantService.responseCode.SUCCESS, ConstantService.responseMessage.QUICK_SAVE_SUCCESS, quickSave);
+
+        } catch (error) {
+            console.log(error);
+            ResponseService.json(res, ConstantService.responseCode.INTERNAL_SERVER_ERROR, ConstantService.responseMessage.QUICK_SAVE_ERROR);
+        }
+    },
+
+
+    /**
+     * Get Quick Saves with search, sort, and pagination
+     * @param req
+     * @param res
+     * @returns {Promise<*>}
+     */
+    getQuickSaves: async (req, res) => {
+        try {
+            const userId = req.sessionData.id;
+
+            // Pagination parameters
+            const page = parseInt(req.query.page) || 1;
+            const limit = parseInt(req.query.limit) || 10;
+
+            // Search parameter
+            const search = req.query.search || '';
+
+            // Sorting parameters
+            const sortBy = req.query.sortBy || 'createdAt';
+            const sortOrder = req.query.sortOrder === 'asc' ? 1 : -1;
+
+            // Validate parameters
+            const schema = joi.object({
+                userId: joi.string().required(),
+                page: joi.number().min(1),
+                limit: joi.number().min(1).max(100),
+                search: joi.string().allow(''),
+                sortBy: joi.string().valid('createdAt', 'updatedAt'),
+                sortOrder: joi.number().valid(1, -1)
+            });
+
+            const { error } = schema.validate({
+                userId,
+                page,
+                limit,
+                search,
+                sortBy,
+                sortOrder
+            });
+
+            if (error) {
+                return ResponseService.jsonResponse(res, ConstantService.responseCode.BAD_REQUEST, {
+                    message: error.message
+                });
+            }
+
+            // Build query
+            let query = { userId };
+
+            // Add search functionality if search parameter is provided
+            if (search) {
+                // Using $regex to search in content fields that are strings
+                // Note: This is a simplified approach as content is a JSON object
+                // For more complex searching within JSON objects, you might need to use $where or other techniques
+                query.$or = [
+                    { 'content.title': { $regex: search, $options: 'i' } },
+                    { 'content.description': { $regex: search, $options: 'i' } }
+                ];
+            }
+
+            // Create sort object
+            const sort = {};
+            sort[sortBy] = sortOrder;
+
+            // Query with pagination
+            const options = {
+                page,
+                limit,
+                sort,
+                lean: true
+            };
+
+            const quickSaves = await QuickSave.paginate(query, options);
+
+            return ResponseService.json(res,
+                ConstantService.responseCode.SUCCESS,
+                ConstantService.responseMessage.QUICK_SAVE_RETRIEVED,
+                quickSaves
+            );
+
+        } catch (error) {
+            console.log(error);
+            return ResponseService.json(res,
+                ConstantService.responseCode.INTERNAL_SERVER_ERROR,
+                ConstantService.responseMessage.QUICK_SAVE_ERROR
+            );
         }
     }
 }

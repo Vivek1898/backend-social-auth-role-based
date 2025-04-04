@@ -51,5 +51,9 @@ module.exports = {
         ERR_FORBIDDEN: "You are not authorized to access this resource",
         ERR_UNAUTHORIZED: "Please login to access this resource",
 
+        QUICK_SAVE_SUCCESS: "Quick save added successfully",
+        QUICK_SAVE_RETRIEVED: "Quick saves retrieved successfully",
+        QUICK_SAVE_ERROR: "Error processing quick save request"
+
     },
 };

@@ -24,7 +24,13 @@ const {loginUser, registerUser} = require("../controller/userController");
  */
 router.get(
     "/google",
-    passport.authenticate("google", {scope: ["profile", "email"]})
+    (req, res, next) => {
+        // The state parameter will be automatically passed to the callback
+        passport.authenticate("google", {
+            scope: ["profile", "email"],
+            state: req.query.state || btoa(process.env.CLIENT_URL),
+        })(req, res, next);
+    }
 );
 
 /**
@@ -40,13 +46,31 @@ router.get(
 
 router.get(
     "/google/callback",
-    passport.authenticate('google', {session: false}), async (req, res) => {
-        const token = await JwtService.issueToken(req.user)
-        res.cookie('token', token, {httpOnly: true})
-        res.status(200).redirect(`${process.env.CLIENT_URL}/home?token=${token}`);
+    (req, res, next) => {
+        passport.authenticate('google', { session: false }, async (err, user) => {
+            if (err) {
+                return res.redirect(`${process.env.CLIENT_URL}/auth/error`);
+            }
+
+            if (!user) {
+                return res.redirect(`${process.env.CLIENT_URL}/auth/error`);
+            }
+
+            const token = await JwtService.issueToken(user);
+
+            // Retrieve and decode the state parameter (contains the redirect host)
+            let redirectHost;
+            try {
+                redirectHost = atob(req.query.state) || process.env.CLIENT_URL;
+            } catch (e) {
+                redirectHost = process.env.CLIENT_URL;
+            }
+
+            res.cookie('token', token, { httpOnly: true });
+            res.status(200).redirect(`${redirectHost}/auth/callback?token=${token}`);
+        })(req, res, next);
     }
 );
-
 
 /**
  * @swagger
